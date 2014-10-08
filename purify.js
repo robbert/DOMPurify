@@ -174,6 +174,11 @@
          */
         var _initDocument = function(dirty){
             
+            /* Exit directly if we have nothing to do */
+            if (typeof dirty === 'string' && dirty.indexOf('<') === -1) { 
+                return dirty; 
+            }
+            
             /* Create documents to map markup to */
             var dom = document.implementation.createHTMLDocument('');
                 dom.body.parentNode.removeChild(dom.body.parentNode.firstElementChild);
@@ -183,7 +188,8 @@
             if(dom.body === null) {
                 dom = document.implementation.createHTMLDocument('');
                 dom.body.innerHTML = dirty;
-                if(dom.body.firstChild.nodeName && !WHOLE_DOCUMENT
+                if(dom.body.firstChild && dom.body.firstChild.nodeName
+                    && !WHOLE_DOCUMENT
                     && dom.body.firstChild.nodeName === 'STYLE'){
                     dom.body.removeChild(dom.body.firstChild);
                 }
@@ -391,6 +397,11 @@
                 _sanitizeAttributes(shadowNode);
             }
         };
+        
+        /* Feature check and untouched opt-out return */
+        if(typeof document.implementation.createHTMLDocument === 'undefined') {
+            return dirty;    
+        }               
 
         /* Assign config vars */
         cfg ? _parseConfig(cfg) : null;
@@ -398,9 +409,9 @@
         /* Initialize the document to work on */
         var body = _initDocument(dirty);
         
-         /* Early exit in case document is empty */
-        if(typeof body === 'undefined') {
-            return '';
+        /* Early exit in case document is empty */
+        if(typeof body !== 'object') {
+            return body ? body : '';
         }
 
         /* Get node iterator */
