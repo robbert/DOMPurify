@@ -14,8 +14,7 @@
 
     var DOMPurify = {};
     DOMPurify.supported = function () {
-        return typeof document.implementation !== "undefined"
-            && typeof document.implementation.createHTMLDocument !== "undefined";
+        return typeof document.implementation.createHTMLDocument !== "undefined";
     };
     DOMPurify.sanitize = function(dirty, cfg) {
 
