@@ -14,7 +14,8 @@
 
     var DOMPurify = {};
     DOMPurify.supported = function () {
-        return typeof document.implementation.createHTMLDocument !== "undefined";
+        return typeof document.implementation.createHTMLDocument !== "undefined"
+            && typeof document.createNodeIterator !== "undefined";
     };
     DOMPurify.sanitize = function(dirty, cfg) {
 
@@ -173,11 +174,6 @@
          * @return a DOM, filled with the dirty markup
          */
         var _initDocument = function(dirty){
-            
-            /* Exit directly if we have nothing to do */
-            if (typeof dirty === 'string' && dirty.indexOf('<') === -1) { 
-                return dirty; 
-            }
             
             /* Create documents to map markup to */
             var dom = document.implementation.createHTMLDocument('');
@@ -398,13 +394,25 @@
             }
         };
         
-        /* Feature check and untouched opt-out return */
-        if(typeof document.implementation.createHTMLDocument === 'undefined') {
-            return dirty;    
-        }               
-
         /* Assign config vars */
         cfg ? _parseConfig(cfg) : null;
+
+        /* Improve performance by skipping input without markup  */
+        if (typeof dirty === 'string' && dirty.indexOf('<') === -1) {
+            if (RETURN_DOM) {
+                /* Return a fragment because it has getElementsByTagName() etc. */
+                var frag = document.createDocumentFragment();
+                frag.appendChild(document.createTextNode(dirty));
+                return frag;
+            }
+            else {
+                return dirty;
+            }
+        }
+
+        /* Feature check and untouched opt-out return */
+        if (!DOMPurify.supported())
+            return dirty;
 
         /* Initialize the document to work on */
         var body = _initDocument(dirty);
